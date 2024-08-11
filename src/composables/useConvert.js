@@ -1,4 +1,8 @@
 export function convertTime(time) {
+  if (!time) {
+    return ""
+  }
+
   const d = new Date(time)
   const now = new Date()
   const timex = new Date(
@@ -27,7 +31,9 @@ export function convertTime(time) {
 export function convertTimeOnly(time) {
   const d = new Date(time).toLocaleTimeString("en-US", {
     hour12: false,
+    hour: "2-digit",
     minute: "2-digit",
   })
-  return d.slice(0, -3)
+
+  return d
 }

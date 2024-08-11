@@ -3,6 +3,13 @@ import SideBar from '@/components/SideBar.vue'
 
 export default {
   components: { SideBar },
+  computed: {
+    me() {
+      const cookie = decodeURIComponent(document.cookie).split(';')
+      const authme = cookie.filter((item) => item.includes('islogin'))
+      return authme[0]?.split('=')[1]
+    }
+  },
   mounted() {
     this.checkCookie()
   },
@@ -20,7 +27,7 @@ export default {
 </script>
 <template>
   <div class="position-relative">
-    <SideBar />
+    <SideBar :me="me" />
     <div class="content">
       <slot />
     </div>

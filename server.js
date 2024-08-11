@@ -13,25 +13,48 @@ const io = new Server(server, {
 const hostname = "127.0.0.1"
 const port = 3000
 
-// app.get('/', function(req, res) {
-//   res.end('ok');
-// });
+let users = {}
 
 io.on("connection", (socket) => {
-  console.log(`${socket.id} connected`)
+  socket.on("join", (arg) => {
+    users[socket.id] = arg
+    socket.join("general")
+    io.to("general").emit("users", users)
+  })
 
   socket.on("disconnect", () => {
-    console.log(`${socket.id} disconnected`)
+    delete users[socket.id]
+    io.to("general").emit("users", users)
   })
-  socket.join("general")
 
-  // socket.on("audio", (arg) => {
-  //   socket.emit("broadcast", arg)
+  // socket.on("joinRoom", (arg) => {
+  //   // console.log("joinRoom", socket.id, arg)
+  //   socket.join(arg.room)
+  //   io.to(arg.room).emit("roomx", `joined ${arg.name} in ${arg.room}`)
+  //   console.log(socket.rooms)
+  // })
+
+  // socket.on("leaveRoom", (arg) => {
+  //   // console.log("leaveRoom", arg)
+  //   socket.leave(arg.room)
+  //   io.to(arg.room).emit("roomx", `${arg.name} has left the room ${arg.room}`)
+  //   //  const a = {
+  //   //    id: socket.id,
+  //   //    name: arg,
+  //   //  }
+  //   //  users.push(a)
+  //   //  socket.join("1")
+  //   //  io.to("general").emit("room", users)
   // })
 
   socket.on("chat", (arg) => {
-    io.to("general").emit("chat", arg)
-    // socket.emit("chat", arg)
+    if (!arg.isGroup) {
+      const to = Object.keys(users).find((key) => users[key] === arg.to)
+      io.to(to).emit("chatMessage", arg)
+    } else {
+      const room = Object.values(users).includes(arg.to)
+      io.to(room).emit("chatMessage", arg)
+    }
   })
 })
 

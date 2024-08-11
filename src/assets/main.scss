@@ -61,10 +61,12 @@ p {
 }
 
 .avatar {
+  position: relative;
   min-width: 2.7rem;
+  max-width: 2.7rem;
   height: 2.7rem;
   border-radius: 7px;
-  margin-right: 1.2rem;
+  // margin-right: 1.2rem;
   background-color: #d4d1d1;
   display: flex;
   align-items: center;
@@ -75,19 +77,28 @@ p {
   font-size: 16px;
 }
 
+.online {
+  position: absolute;
+  border: 3px solid #131313;
+  background: #0eaf76;
+  border-radius: 50%;
+  width: 0.8rem;
+  height: 0.8rem;
+  bottom: -2px;
+  right: -2px;
+}
+
 .chat-list {
   p {
     color: #fff;
     font-weight: 500;
   }
-
   span {
     font-size: 12px;
   }
 
   .list {
     display: flex;
-    align-items: center;
     cursor: pointer;
     padding: 16px;
     text-decoration: none;
@@ -150,7 +161,7 @@ p {
   .list {
     display: flex;
     align-items: end;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
   }
 
   p {
@@ -187,4 +198,71 @@ p {
   height: 50px;
   background-color: #666;
   border-radius: 6px;
+}
+
+.photo-profile {
+  border-radius: 50%;
+  width: 100%;
+}
+
+.new-chat {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin: 0 1rem 1rem 0;
+  background: #0d6efd;
+  border-radius: 50%;
+  width: 3.2rem;
+  height: 3.2rem;
+  cursor: pointer;
+  color: #ffffff;
+  transition: all ease-in-out 0.3s;
+  overflow: hidden;
+
+  &:hover {
+    border-radius: 25px;
+    transition: all ease-in-out 0.3s;
+    width: 8rem;
+    background-image: linear-gradient(rgb(0 0 0/10%) 0 0);
+  }
+
+  .text {
+    white-space: nowrap;
+    top: 0.8rem;
+    font-weight: 700;
+    position: absolute;
+    width: 75px;
+    transform: translateX(110%);
+    transition: all ease-in-out 0.3s;
+  }
+
+  &:hover {
+    .text {
+      margin-left: 36px;
+      transform: translateX(0);
+      transition: all ease-in-out 0.3s;
+    }
+  }
+
+  img {
+    top: 0.8rem;
+    position: absolute;
+    width: 1.65rem;
+    height: 1.65rem;
+  }
+}
+
+.modal-content {
+  background-color: #212529;
+}
+
+.word-break {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.chat-text {
+  font-size: 12px;
+  color: #d4d1d1 !important;
+  font-weight: 400 !important;
 }

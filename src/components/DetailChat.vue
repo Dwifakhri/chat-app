@@ -3,38 +3,43 @@ import { ref } from 'vue';
 import { decodeString } from '@/composables/useDecode'
 import { convertTimeOnly } from '@/composables/useConvert'
 
-const props = defineProps(["dataChat"])
+const props = defineProps(["dataChat", "isOnline", "me"])
 const emit = defineEmits(["sendMessage"])
-const chat = ref('')
-const cookie = decodeURIComponent(document.cookie).split(';')
-const me = cookie.filter((item) => item.includes('islogin'))
-const me2 = me[0]?.split('=')[1]
+const chat = ref("")
 
 const inputChat = () => {
   const message = {
-    id: props.dataChat.id,
-    name: me2, text: chat.value, time: new Date().getTime()
+    to: props.dataChat.id,
+    from: props.me,
+    isGroup: props.dataChat.isGroup,
+    list: {
+      id: props.dataChat.list.length ? props.dataChat.list.length : 0,
+      name: props.me,
+      text: chat.value,
+    }
   }
   emit('sendMessage', message)
   chat.value = ""
 }
+
 </script>
 
 <template>
   <div class="chat-section">
     <div class="chat-detail">
       <div class="header-chat">
-        <h5 class="text-capitalize">{{ dataChat.name }}</h5>
-        <span>Online</span>
+        <h5 class="text-capitalize">{{ props.dataChat?.name }}</h5>
+        <span>{{ props.isOnline ? 'Online' : 'Offline' }}</span>
       </div>
     </div>
     <div class="detail-list">
-      <div v-if="!props.dataChat.list.length" class="no-msg">No message</div>
+      <div v-if="!props.dataChat?.list?.length" class="no-msg">No message</div>
       <template v-else>
-        <div v-for="(item, i) in props.dataChat?.list" :key="i" class="list">
-          <div class="avatar">{{ decodeString(item.name) }}</div>
-          <div class="active">
-            <p class="mb-2 text-capitalize">{{ item.name }}</p>
+        <div v-for="(item, i) in props?.dataChat?.list" :key="i"
+          :class="`list ${item.name === props.me ? 'justify-content-end' : ''}`">
+          <!-- <div v-if="item.name !== props.me" class="avatar">{{ decodeString(item.name) }}</div> -->
+          <div class="active py-2">
+            <!-- <p class="text-capitalize">{{ item.name === props.me ? 'You' : item.name }}</p> -->
             <span>{{ item.text }}</span>
             <div class="d-flex justify-content-end ms-3">
               <span style="font-size: 12px;">
