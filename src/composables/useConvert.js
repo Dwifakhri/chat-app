@@ -19,7 +19,10 @@ export function convertTime(time) {
 
   if (diff < 1) {
     return (
-      d.getHours() + ":" + ((d.getMinutes() > 9 ? "" : "0") + d.getMinutes())
+      (d.getHours() > 9 ? "" : "0") +
+      d.getHours() +
+      ":" +
+      ((d.getMinutes() > 9 ? "" : "0") + d.getMinutes())
     )
   } else if (diff === 1 || diff < 2) {
     return "Yesterday"

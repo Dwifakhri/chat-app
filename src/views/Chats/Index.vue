@@ -6,7 +6,6 @@ import { convertTime } from '@/composables/useConvert'
 import { useRoute, useRouter } from 'vue-router';
 import io from "socket.io-client"
 
-
 const detail = ref([
   // {
   //   id: 'john', name: 'john', isGroup: false, list:
@@ -32,32 +31,22 @@ const isDetail = computed(() => {
   return useRoute().name === 'detail'
 })
 
-
 const chats = computed(() => {
   if (detail.value.length) {
     return detail.value.map((item) => {
       return {
         id: item.id,
+        from: item.from,
         name: item.name || '',
         lastText: item.list[item.list.length - 1]?.text || '',
         lastUpdate: item.list[item.list.length - 1]?.time,
+        unreadChat: item.list.filter(item => !item.isSent && item.name !== me)?.length,
+        isRead: item.list[item.list.length - 1]?.isRead
       }
     })
   }
   return []
 })
-
-// watch(useRoute(), (value) => {
-
-//   if (value.name === 'detail') {
-//     socket.value.emit("joinRoom", { name: me, room: value.params.id })
-//   }
-//   // else {
-//   //   console.log('ok');
-
-//   //   socket.value.emit("leaveRoom", { name: me, room: value.params.id })
-//   // }
-// })
 
 const detailChat = computed(() => {
   if (isDetail.value) {
@@ -70,6 +59,15 @@ const onlineUsers = computed(() => {
   return Object.values(online.value).filter((item) => item !== me)
 
 })
+
+// watch(isDetail, () => {
+//   // console.log(isDetail.value);
+
+//   if (detail.value) {
+//     console.log('sdce');
+
+//   }
+// })
 
 onMounted(() => {
   socket.value = io("http://127.0.0.1:3000")
@@ -96,34 +94,50 @@ onMounted(() => {
 
     // })
 
+    socket.value?.on("readMessage", (arg) => {
+      // console.log(arg);
+      // console.log(detail.value);
+
+
+      detail.value = detail.value.map((obj) => {
+        if (obj.id === arg.from) {
+          const list = obj.list.map((item) =>
+            ({ ...item, isRead: true })
+          )
+          return { ...obj, list }
+        } return obj
+      })
+    })
+
     socket.value?.on("chatMessage", (arg) => {
-      console.log(arg, 'ono');
 
       const isExistChat = detail.value.find((item) => item.id.includes(arg.from))
       if (isExistChat) {
-        console.log('1');
-
-        detail.value.map((obj) => {
+        detail.value = detail.value.map((obj) => {
           if (obj.id === arg.from) {
-            return obj.list.push(
-              { id: arg.list.id, name: arg.list.name, text: arg.list.text, time: arg.list.time }
-            )
+            const newObj = {
+              ...obj, from: arg.from,
+              list: isDetail.value ? [...obj.list, { ...arg.list, isSent: true }] : [...obj.list, arg.list]
+            }
+            if (isDetail.value) {
+              socket.value?.emit("read", { to: arg.from, isGroup: false, from: me })
+            }
+            return newObj
           } return obj
         })
+
       } else {
         const newChat = {
-          id: arg.from, name: arg.from, list:
+          id: arg.from, name: arg.from, from: arg.from, list:
             [
-              { id: arg.list.id, name: arg.list.name, text: arg.list.text, time: arg.list.time }
+              arg.list
             ]
         }
-        console.log(newChat);
-
         return detail.value.push(newChat)
       }
+
     })
   }
-
 })
 
 onUnmounted(() => {
@@ -135,6 +149,7 @@ const onSubmit = (e) => {
   Object.assign({}, obj)
   obj.list.time = new Date().getTime()
   const existChat = detail.value.find((item) => item.id === obj.to)
+  existChat.from = obj.from
   existChat.list.push(obj.list)
   socket.value.emit("chat", obj)
 }
@@ -147,12 +162,25 @@ const create = (val) => {
   const existChat = detail.value.find((item) => item.id === val)
   if (!existChat) {
     detail.value.push({
-      id: val, name: val, list: []
+      id: val, name: val, from: me, list: []
     })
     socket.value?.emit("joinRoom", { name: val, room: val })
   }
   router.push(`/chat/detail/${val}`)
 }
+
+const readChat = (val) => {
+  detail.value = detail.value.map((obj) => {
+    if (obj.id === val.to) {
+      const list = obj.list.map((item) =>
+        ({ ...item, isSent: true })
+      )
+      return { ...obj, list }
+    } return obj
+  })
+  socket.value.emit("read", val)
+}
+
 // const connect = () => {
 //   const socket = io("http://127.0.0.1:3000")
 //   if (!connected.value) {
@@ -190,10 +218,15 @@ const create = (val) => {
               <p class="text-capitalize">{{ item.name }}</p>
               <p class="text-truncate chat-text">{{ item.lastText }}</p>
             </div>
-            <div class="w-25">
-              <span>
+            <div class="w-25 text-end">
+              <span class="d-block">
                 {{ convertTime(item.lastUpdate) }}
               </span>
+              <div class="d-flex justify-content-end align-items-center">
+                <div v-if="item.from === me && item.lastText" class="check"
+                  :style="`background-color: ${item.isRead ? '#3395ed' : 'grey'}`" />
+                <span v-if="item.unreadChat && item.from !== me" class="number-chat">{{ item.unreadChat }}</span>
+              </div>
             </div>
           </router-link>
         </template>
@@ -209,7 +242,8 @@ const create = (val) => {
         <p>Select chat to start messaging</p>
       </div>
       <template v-else>
-        <detail-chat :data-chat="detailChat" :isOnline="checkOnline(detailChat.id)" :me="me" @send-message="onSubmit">
+        <detail-chat :data-chat="detailChat" :isOnline="checkOnline(detailChat.id)" :me="me" @send-message="onSubmit"
+          @read-chat="readChat">
         </detail-chat>
       </template>
     </div>
@@ -223,8 +257,8 @@ const create = (val) => {
         </div>
         <div class="modal-body">
           <div v-if="onlineUsers.length" class="chat-list">
-            <div v-for="(item, i) in onlineUsers" :key="i" class="list py-2 px-3" data-bs-dismiss="modal"
-              @click.prevent="create(item)">
+            <div v-for="(item, i) in onlineUsers" :key="i" class="list align-items-center py-2 px-3"
+              data-bs-dismiss="modal" @click.prevent="create(item)">
               <div class="me-3 py-1">
                 <div class="avatar">{{ decodeString(item) }}<span v-if="checkOnline(item)" class="online"></span>
                 </div>

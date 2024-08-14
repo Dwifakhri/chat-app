@@ -56,6 +56,17 @@ io.on("connection", (socket) => {
       io.to(room).emit("chatMessage", arg)
     }
   })
+
+  socket.on("read", (arg) => {
+    if (!arg.isGroup) {
+      const to = Object.keys(users).find((key) => users[key] === arg.to)
+      io.to(to).emit("readMessage", arg)
+    }
+    // else {
+    //   const room = Object.values(users).includes(arg.to)
+    //   io.to(room).emit("chatMessage", arg)
+    // }
+  })
 })
 
 server.listen(port, hostname, () => {
