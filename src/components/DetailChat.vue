@@ -1,14 +1,34 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { decodeString } from '@/composables/useDecode'
 import { convertTimeOnly } from '@/composables/useConvert'
+import { useRoute } from 'vue-router';
+const route = useRoute()
 
 const props = defineProps(["dataChat", "isOnline", "me"])
 const emit = defineEmits(["sendMessage", "readChat"])
 const chat = ref("")
 
 onMounted(() => {
-  emit("readChat", { to: props.dataChat.id, isGroup: props.dataChat.isGroup, from: props.me })
+  if (route.params.id === props.dataChat.id) {
+    emit("readChat", { to: props.dataChat.id, isGroup: props.dataChat.isGroup, from: props.me })
+  }
+})
+
+watch(() => route.params.id, () => {
+  console.log("sd");
+  if (route.params.id === props.dataChat.id) {
+    console.log("emit");
+
+    emit("readChat", { to: props.dataChat.id, isGroup: props.dataChat.isGroup, from: props.me })
+  }
+})
+
+const member = computed(() => {
+  if (props.dataChat.isGroup) {
+    return ["You", [...props.dataChat.member.filter(item => item !== props.me)],]
+  }
+  return null
 })
 
 const inputChat = () => {
@@ -16,6 +36,7 @@ const inputChat = () => {
     to: props.dataChat.id,
     from: props.me,
     isGroup: props.dataChat.isGroup,
+    ...props.dataChat.isGroup && { member: props.dataChat.member },
     list: {
       id: props.dataChat.list.length ? props.dataChat.list.length : 0,
       name: props.me,
@@ -38,8 +59,16 @@ const inputChat = () => {
       <div class="header-chat">
         <h5 class="text-capitalize">{{ props.dataChat?.name }}</h5>
         <div class="d-flex align-items-center">
-          <span>{{ props.isOnline ? 'Online' : 'Offline' }}</span>
-          <span class="online position-static"></span>
+          <template v-if="!props.dataChat.isGroup">
+            <span>{{ props.isOnline ? 'Online' : 'Offline' }}</span>
+            <span v-if="props.isOnline" class="online position-static"></span>
+          </template>
+          <template v-else>
+            <span v-for="(item, i) in member" :key="i">
+              {{ i !== props.dataChat.member.length - 1 ? (item + ",") :
+                " " + item }}
+            </span>
+          </template>
         </div>
       </div>
     </div>
@@ -48,9 +77,11 @@ const inputChat = () => {
       <template v-else>
         <div v-for="(item, i) in props?.dataChat?.list" :key="i" :id="'chat' + i"
           :class="`list ${item.name === props.me ? 'justify-content-end' : ''}`">
-          <!-- <div v-if="item.name !== props.me" class="avatar">{{ decodeString(item.name) }}</div> -->
+          <!-- <div v-if="props.dataChat.isGroup && item.name !== props.me" class="avatar">{{ decodeString(item.name) }}
+          </div> -->
           <div class="active py-2">
-            <!-- <p class="text-capitalize">{{ item.name === props.me ? 'You' : item.name }}</p> -->
+            <p v-if="props.dataChat.isGroup" class="text-capitalize">{{ item.name === props.me ? 'You' : item.name }}
+            </p>
             <span>{{ item.text }}</span>
             <div class="d-flex justify-content-end align-items-center ms-3">
               <span style="font-size: 12px;">

@@ -24,11 +24,15 @@ const online = ref([])
 const cookie = decodeURIComponent(document.cookie).split(';')
 const authme = cookie.filter((item) => item.includes('islogin'))
 const me = authme[0]?.split('=')[1]
+const showBtn = ref(false)
 const socket = ref({})
 const router = useRouter()
+const route = useRoute()
+const groupName = ref('')
+const selectedUsers = ref([])
 
 const isDetail = computed(() => {
-  return useRoute().name === 'detail'
+  return route.name === 'detail'
 })
 
 const chats = computed(() => {
@@ -89,16 +93,28 @@ onMounted(() => {
       // online.value = JSON.parse(localStorage.getItem("users"))
     })
 
-    // socket.value?.on("roomx", (arg) => {
-    //   console.log(arg);
+    socket.value?.on("roomx", (arg) => {
+      const existChat = detail.value.find((item) => item.id === arg.room)
+      if (existChat) {
+        detail.value = detail.value.map((obj) => {
+          if (obj.id === arg.room) {
+            return { ...obj, member: [...obj.member, arg.name] }
+          }
+          return obj
+        })
+      } else {
+        detail.value.push({
+          id: arg.room, name: arg.room, isGroup: true, member: [arg.name], list: []
+        })
+      }
+    })
 
-    // })
+    socket.value?.on("room", (arg) => {
+      socket.value.emit("joinRoom", { name: me, room: arg.room })
+
+    })
 
     socket.value?.on("readMessage", (arg) => {
-      // console.log(arg);
-      // console.log(detail.value);
-
-
       detail.value = detail.value.map((obj) => {
         if (obj.id === arg.from) {
           const list = obj.list.map((item) =>
@@ -110,25 +126,32 @@ onMounted(() => {
     })
 
     socket.value?.on("chatMessage", (arg) => {
-
-      const isExistChat = detail.value.find((item) => item.id.includes(arg.from))
+      let isExistChat
+      if (arg.isGroup) {
+        isExistChat = detail.value.find((item) => item.id.includes(arg.to))
+      } else {
+        isExistChat = detail.value.find((item) => item.id.includes(arg.from))
+      }
       if (isExistChat) {
+        let from = arg.isGroup ? arg.to : arg.from
         detail.value = detail.value.map((obj) => {
-          if (obj.id === arg.from) {
+
+          if (obj.id === from && arg.from !== me) {
             const newObj = {
-              ...obj, from: arg.from,
-              list: isDetail.value ? [...obj.list, { ...arg.list, isSent: true }] : [...obj.list, arg.list]
+              ...obj, from: from,
+              list: route?.params?.id === from ? [...obj.list, { ...arg.list, isSent: true }] : [...obj.list, arg.list]
             }
-            if (isDetail.value) {
-              socket.value?.emit("read", { to: arg.from, isGroup: false, from: me })
+            if (route?.params?.id === from) {
+              socket.value?.emit("read", { to: from, isGroup: arg.isGroup, from: me })
             }
             return newObj
           } return obj
         })
 
       } else {
+        let from = arg.isGroup ? arg.to : arg.from
         const newChat = {
-          id: arg.from, name: arg.from, from: arg.from, list:
+          id: from, name: from, from: from, isGroup: arg.isGroup, ...arg.isGroup && { member: arg.member }, list:
             [
               arg.list
             ]
@@ -162,9 +185,8 @@ const create = (val) => {
   const existChat = detail.value.find((item) => item.id === val)
   if (!existChat) {
     detail.value.push({
-      id: val, name: val, from: me, list: []
+      id: val, name: val, from: me, isGroup: false, list: []
     })
-    socket.value?.emit("joinRoom", { name: val, room: val })
   }
   router.push(`/chat/detail/${val}`)
 }
@@ -179,6 +201,18 @@ const readChat = (val) => {
     } return obj
   })
   socket.value.emit("read", val)
+}
+
+const createGroup = () => {
+  const existChat = detail.value.find((item) => item.id === groupName.value)
+  if (!existChat) {
+    detail.value.push({
+      id: groupName.value, name: groupName.value, isGroup: true, member: [...selectedUsers.value], list: []
+    })
+    socket.value?.emit("inviteRoom", { name: [...selectedUsers.value, me], room: groupName.value })
+    // socket.value.emit("joinRoom", { name: me, room: groupName.value })
+  }
+  router.push(`/chat/detail/${groupName.value}`)
 }
 
 // const connect = () => {
@@ -198,11 +232,19 @@ const readChat = (val) => {
 
 <template>
   <div class="row position-relative">
-    <div v-if="useRoute().name === 'chat'" class="new-chat" type="button" data-bs-toggle="modal"
-      data-bs-target="#usersModal">
-      <img src="@/assets/icon/chat.svg" alt="chat">
-      <p class="text">New Chat</p>
-    </div>
+    <template v-if="useRoute().name === 'chat'">
+      <div class="new btn-plus" @click.prevent="showBtn = !showBtn">
+        <img src="@/assets/icon/plus.svg" alt="plus">
+      </div>
+      <div :class="`new ${showBtn ? 'btn-chat-show' : 'btn-chat'}`" type="button" data-bs-toggle="modal"
+        data-bs-target="#usersModal">
+        <img src="@/assets/icon/chat.svg" alt="chat">
+      </div>
+      <div :class="`new ${showBtn ? 'btn-grp-show' : 'btn-grp'}`" type="button" data-bs-toggle="modal"
+        data-bs-target="#groupModal">
+        <img src="@/assets/icon/users.svg" alt="grp">
+      </div>
+    </template>
     <div class="col-3 px-0">
       <div class="chat-list chat-section">
         <div class="px-3 mb-3 mt-1">
@@ -269,6 +311,40 @@ const readChat = (val) => {
             </div>
           </div>
           <p v-else>No user online</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="groupModal" tabindex="-1" aria-labelledby="groupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5 text-white" id="groupModalLabel">Create group with user</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3 mt-1">
+            <label class="form-label text-white" for="grp-user">Name</label>
+            <input id="grp-user" type="text" placeholder="Group name" class="form-control" v-model="groupName">
+          </div>
+          <div v-if="onlineUsers.length" class="chat-list">
+            <div v-for="(item, i) in onlineUsers" :key="i" class="list align-items-center py-2 px-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" :id="item" :value="item" v-model="selectedUsers">
+                <label class="form-check-label" :for="item">
+                  <div class="py-1 d-flex flex-row justify-content-between align-items-start">
+                    <div class="avatar">{{ decodeString(item) }}<span v-if="checkOnline(item)" class="online"></span>
+                    </div>
+                    <p class="ms-2 text-capitalize">{{ item }}</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+          <p v-else>No user online</p>
+          <button class="btn btn-primary w-100 mt-3" data-bs-dismiss="modal" type="button" @click="createGroup"
+            :disabled="!groupName.length || !selectedUsers.length">Create
+            group</button>
         </div>
       </div>
     </div>

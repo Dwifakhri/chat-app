@@ -205,43 +205,20 @@ p {
   width: 100%;
 }
 
-.new-chat {
+.new {
   position: absolute;
   bottom: 0;
   right: 0;
   margin: 0 1rem 1rem 0;
-  background: #0d6efd;
+  background: #df6b06;
   border-radius: 50%;
   width: 3.2rem;
   height: 3.2rem;
   cursor: pointer;
   color: #ffffff;
-  transition: all ease-in-out 0.3s;
-  overflow: hidden;
 
   &:hover {
-    border-radius: 25px;
-    transition: all ease-in-out 0.3s;
-    width: 8rem;
-    background-image: linear-gradient(rgb(0 0 0/10%) 0 0);
-  }
-
-  .text {
-    white-space: nowrap;
-    top: 0.8rem;
-    font-weight: 700;
-    position: absolute;
-    width: 75px;
-    transform: translateX(110%);
-    transition: all ease-in-out 0.3s;
-  }
-
-  &:hover {
-    .text {
-      margin-left: 36px;
-      transform: translateX(0);
-      transition: all ease-in-out 0.3s;
-    }
+    -webkit-filter: brightness(80%);
   }
 
   img {
@@ -250,6 +227,36 @@ p {
     width: 1.65rem;
     height: 1.65rem;
   }
+}
+
+.btn-plus {
+  scale: 1.01;
+  background: #0d6efd;
+}
+
+.btn-chat {
+  z-index: 99;
+  transform: translateY(0);
+  transition: all ease-in-out 0.3s;
+}
+
+.btn-chat-show {
+  transform: translateY(-120%);
+  transition: all ease-in-out 0.3s;
+}
+
+.btn-grp {
+  z-index: 98;
+  transform: translateY(0);
+  transition: all ease-in-out 0.3s;
+}
+.btn-grp-show {
+  transform: translateY(-240%);
+  transition: all ease-in-out 0.35s;
+}
+
+.btn-plus {
+  z-index: 100;
 }
 
 .modal-content {

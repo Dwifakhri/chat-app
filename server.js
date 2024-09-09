@@ -27,12 +27,18 @@ io.on("connection", (socket) => {
     io.to("general").emit("users", users)
   })
 
-  // socket.on("joinRoom", (arg) => {
-  //   // console.log("joinRoom", socket.id, arg)
-  //   socket.join(arg.room)
-  //   io.to(arg.room).emit("roomx", `joined ${arg.name} in ${arg.room}`)
-  //   console.log(socket.rooms)
-  // })
+  socket.on("inviteRoom", (arg) => {
+    const idSockets = Object.keys(users).filter((key) =>
+      arg.name.includes(users[key])
+    )
+    io.to(idSockets).emit("room", arg)
+  })
+
+  socket.on("joinRoom", (arg) => {
+    const to = Object.keys(users).find((key) => users[key] === arg.name)
+    socket.join(arg.room)
+    io.to(arg.room).emit("roomx", arg)
+  })
 
   // socket.on("leaveRoom", (arg) => {
   //   // console.log("leaveRoom", arg)
@@ -52,8 +58,7 @@ io.on("connection", (socket) => {
       const to = Object.keys(users).find((key) => users[key] === arg.to)
       io.to(to).emit("chatMessage", arg)
     } else {
-      const room = Object.values(users).includes(arg.to)
-      io.to(room).emit("chatMessage", arg)
+      io.to(arg.to).emit("chatMessage", arg)
     }
   })
 
@@ -61,11 +66,10 @@ io.on("connection", (socket) => {
     if (!arg.isGroup) {
       const to = Object.keys(users).find((key) => users[key] === arg.to)
       io.to(to).emit("readMessage", arg)
+    } else {
+      const room = Object.values(users).includes(arg.to)
+      io.to(room).emit("chatMessage", arg)
     }
-    // else {
-    //   const room = Object.values(users).includes(arg.to)
-    //   io.to(room).emit("chatMessage", arg)
-    // }
   })
 })
 
