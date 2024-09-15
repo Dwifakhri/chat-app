@@ -21,9 +21,9 @@ const detail = ref([
   // }
 ])
 const online = ref([])
-const cookie = decodeURIComponent(document.cookie).split(';')
-const authme = cookie.filter((item) => item.includes('islogin'))
-const me = authme[0]?.split('=')[1]
+// const cookie = decodeURIComponent(document.cookie).split(';')
+// const authme = cookie.filter((item) => item.includes('islogin'))
+const me = sessionStorage.getItem("islogin")
 const showBtn = ref(false)
 const socket = ref({})
 const router = useRouter()
@@ -98,19 +98,29 @@ onMounted(() => {
       if (existChat) {
         detail.value = detail.value.map((obj) => {
           if (obj.id === arg.room) {
-            return { ...obj, member: [...obj.member, arg.name] }
+            if (!arg.isInvite) {
+              return { ...obj, member: [...obj.member, arg.name] }
+            } else {
+              return { ...obj, member: [...obj.member] }
+            }
           }
           return obj
         })
       } else {
         detail.value.push({
-          id: arg.room, name: arg.room, isGroup: true, member: [arg.name], list: []
+          id: arg.room, name: arg.room, isGroup: true, member: [...arg.member], list: []
         })
       }
     })
 
     socket.value?.on("room", (arg) => {
-      socket.value.emit("joinRoom", { name: me, room: arg.room })
+      socket.value.emit("joinRoom", { name: me, room: arg.room, isInvite: true })
+      const existChat = detail.value.find((item) => item.id === arg.room)
+      if (!existChat) {
+        detail.value.push({
+          id: arg.room, name: arg.room, isGroup: true, member: arg.name, list: []
+        })
+      }
 
     })
 
@@ -152,9 +162,7 @@ onMounted(() => {
         let from = arg.isGroup ? arg.to : arg.from
         const newChat = {
           id: from, name: from, from: from, isGroup: arg.isGroup, ...arg.isGroup && { member: arg.member }, list:
-            [
-              arg.list
-            ]
+            [arg.list]
         }
         return detail.value.push(newChat)
       }
@@ -207,12 +215,17 @@ const createGroup = () => {
   const existChat = detail.value.find((item) => item.id === groupName.value)
   if (!existChat) {
     detail.value.push({
-      id: groupName.value, name: groupName.value, isGroup: true, member: [...selectedUsers.value], list: []
+      id: groupName.value, name: groupName.value, isGroup: true, member: [...selectedUsers.value, me], list: []
     })
     socket.value?.emit("inviteRoom", { name: [...selectedUsers.value, me], room: groupName.value })
-    // socket.value.emit("joinRoom", { name: me, room: groupName.value })
   }
   router.push(`/chat/detail/${groupName.value}`)
+  groupName.value = ""
+}
+
+const joinGroup = () => {
+  socket.value.emit("joinRoom", { name: me, room: groupName.value, isInvite: false })
+  groupName.value = ""
 }
 
 // const connect = () => {
@@ -273,8 +286,12 @@ const createGroup = () => {
           </router-link>
         </template>
         <div v-else class="px-3">
-          <button class="btn btn-primary w-100" type="button" data-bs-toggle="modal" data-bs-target="#usersModal">New
-            message</button>
+          <button class="btn btn-primary w-100" type="button" data-bs-toggle="modal" data-bs-target="#usersModal">
+            New message
+          </button>
+          <button class="btn btn-success w-100 mt-2" type="button" data-bs-toggle="modal" data-bs-target="#joinGroup">
+            Join group
+          </button>
         </div>
       </div>
     </div>
@@ -345,6 +362,24 @@ const createGroup = () => {
           <button class="btn btn-primary w-100 mt-3" data-bs-dismiss="modal" type="button" @click="createGroup"
             :disabled="!groupName.length || !selectedUsers.length">Create
             group</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="joinGroup" tabindex="-1" aria-labelledby="joinGroupLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5 text-white" id="joinGroupLabel">Join a group</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3 mt-1">
+            <label class="form-label text-white" for="grp-user-name">Group Name</label>
+            <input id="grp-user-name" type="text" placeholder="Group name" class="form-control" v-model="groupName">
+          </div>
+          <button class="btn btn-primary w-100 mt-2" data-bs-dismiss="modal" type="button" @click="joinGroup"
+            :disabled="!groupName.length">Join</button>
         </div>
       </div>
     </div>

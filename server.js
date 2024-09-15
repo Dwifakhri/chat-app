@@ -35,9 +35,16 @@ io.on("connection", (socket) => {
   })
 
   socket.on("joinRoom", (arg) => {
-    const to = Object.keys(users).find((key) => users[key] === arg.name)
     socket.join(arg.room)
-    io.to(arg.room).emit("roomx", arg)
+    const socketRooms = io.sockets.adapter.rooms.get(arg.room)
+    const a = Array.from(socketRooms)
+    const member = Object.keys(users)
+      .filter((key) => a.includes(key))
+      .map((key) => users[key])
+
+    io.to(arg.room)
+      .except(arg.name)
+      .emit("roomx", { ...arg, member: member })
   })
 
   // socket.on("leaveRoom", (arg) => {

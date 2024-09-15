@@ -5,18 +5,18 @@ export default {
   components: { SideBar },
   computed: {
     me() {
-      const cookie = decodeURIComponent(document.cookie).split(';')
-      const authme = cookie.filter((item) => item.includes('islogin'))
-      return authme[0]?.split('=')[1]
+      // const cookie = decodeURIComponent(document.cookie).split(';')
+      // const authme = cookie.filter((item) => item.includes('islogin'))
+      return sessionStorage.getItem("islogin")
     }
   },
   mounted() {
-    this.checkCookie()
+    this.checkSession()
   },
   methods: {
-    checkCookie() {
-      const cookie = decodeURIComponent(document.cookie)
-      if (!cookie.includes('islogin')) {
+    checkSession() {
+      const session = sessionStorage.getItem("islogin")
+      if (!session) {
         this.$router.push('/')
       }
       return

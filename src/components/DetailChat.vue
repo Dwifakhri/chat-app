@@ -18,8 +18,6 @@ onMounted(() => {
 watch(() => route.params.id, () => {
   console.log("sd");
   if (route.params.id === props.dataChat.id) {
-    console.log("emit");
-
     emit("readChat", { to: props.dataChat.id, isGroup: props.dataChat.isGroup, from: props.me })
   }
 })

@@ -9,7 +9,7 @@ export default {
     };
   },
   mounted() {
-    this.checkCookie()
+    this.checkSession()
     // this.$socket.on("connect", () => {
     //   console.log("connected-" + this.$socket.id)
     // });
@@ -31,18 +31,19 @@ export default {
     // })
   },
   methods: {
-    checkCookie() {
-      const cookie = decodeURIComponent(document.cookie)
-      if (cookie.includes('islogin')) {
+    checkSession() {
+      const session = sessionStorage.getItem("islogin")
+      if (session) {
         this.$router.push('/chat')
       }
       return
     },
     login() {
       this.loading = true
-      const expires = new Date(new Date().getTime() + this.authExpired * 60000)
+      // const expires = new Date(new Date().getTime() + this.authExpired * 60000)
+      sessionStorage.setItem("islogin", this.username)
       setTimeout(() => {
-        document.cookie = `islogin=${this.username}; expires=${expires}`
+        // document.cookie = `islogin=${this.username}; expires=${expires}`
         this.$router.push("/chat")
       }, 500);
     }

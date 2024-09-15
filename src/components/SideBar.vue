@@ -42,7 +42,8 @@ export default {
   },
   methods: {
     logout() {
-      document.cookie = "islogin=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      sessionStorage.removeItem("islogin")
+      // document.cookie = "islogin=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     }
   }
 }
