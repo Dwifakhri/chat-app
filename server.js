@@ -14,6 +14,7 @@ const hostname = "127.0.0.1"
 const port = 3000
 
 let users = {}
+let groups = []
 
 io.on("connection", (socket) => {
   socket.on("join", (arg) => {
@@ -28,9 +29,11 @@ io.on("connection", (socket) => {
   })
 
   socket.on("inviteRoom", (arg) => {
+    groups.push(arg.room)
     const idSockets = Object.keys(users).filter((key) =>
       arg.name.includes(users[key])
     )
+    io.to("general").emit("groups", groups)
     io.to(idSockets).emit("room", arg)
   })
 
@@ -41,23 +44,14 @@ io.on("connection", (socket) => {
     const member = Object.keys(users)
       .filter((key) => a.includes(key))
       .map((key) => users[key])
-
     io.to(arg.room)
       .except(arg.name)
       .emit("roomx", { ...arg, member: member })
   })
 
   // socket.on("leaveRoom", (arg) => {
-  //   // console.log("leaveRoom", arg)
   //   socket.leave(arg.room)
   //   io.to(arg.room).emit("roomx", `${arg.name} has left the room ${arg.room}`)
-  //   //  const a = {
-  //   //    id: socket.id,
-  //   //    name: arg,
-  //   //  }
-  //   //  users.push(a)
-  //   //  socket.join("1")
-  //   //  io.to("general").emit("room", users)
   // })
 
   socket.on("chat", (arg) => {

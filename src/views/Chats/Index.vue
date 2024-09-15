@@ -6,23 +6,9 @@ import { convertTime } from '@/composables/useConvert'
 import { useRoute, useRouter } from 'vue-router';
 import io from "socket.io-client"
 
-const detail = ref([
-  // {
-  //   id: 'john', name: 'john', isGroup: false, list:
-  //     [
-  //       { id: 0, name: 'john', text: 'Hay You', time: 1722519615000, },
-  //     ]
-  // },
-  // {
-  //   id: 'office', name: 'office', isGroup: true, list:
-  //     [
-  //       { id: 0, name: 'office', text: 'Announcement', time: 1722436860000 }
-  //     ]
-  // }
-])
+const detail = ref([])
 const online = ref([])
-// const cookie = decodeURIComponent(document.cookie).split(';')
-// const authme = cookie.filter((item) => item.includes('islogin'))
+const groups = ref([])
 const me = sessionStorage.getItem("islogin")
 const showBtn = ref(false)
 const socket = ref({})
@@ -30,6 +16,7 @@ const router = useRouter()
 const route = useRoute()
 const groupName = ref('')
 const selectedUsers = ref([])
+const selectedGroup = ref('')
 
 const isDetail = computed(() => {
   return route.name === 'detail'
@@ -64,33 +51,17 @@ const onlineUsers = computed(() => {
 
 })
 
-// watch(isDetail, () => {
-//   // console.log(isDetail.value);
-
-//   if (detail.value) {
-//     console.log('sdce');
-
-//   }
-// })
-
 onMounted(() => {
   socket.value = io("http://127.0.0.1:3000")
 
   if (socket) {
     socket.value?.emit("join", me)
-    // chats.value.forEach(element => {
-    //   return socket.value?.emit("joinRoom", { name: element.name, room: element.id })
-    // });
-
     socket.value?.on("users", (arg) => {
       online.value = arg
-      // const users = JSON.parse(localStorage.getItem("users")) || []
-      // const isExist = users.find((item) => item === me)
-      // if (!isExist) {
-      //   users.push(arg)
-      // }
-      // localStorage.setItem("users", JSON.stringify(users))
-      // online.value = JSON.parse(localStorage.getItem("users"))
+    })
+
+    socket.value?.on("groups", (arg) => {
+      groups.value = arg
     })
 
     socket.value?.on("roomx", (arg) => {
@@ -121,7 +92,6 @@ onMounted(() => {
           id: arg.room, name: arg.room, isGroup: true, member: arg.name, list: []
         })
       }
-
     })
 
     socket.value?.on("readMessage", (arg) => {
@@ -145,7 +115,6 @@ onMounted(() => {
       if (isExistChat) {
         let from = arg.isGroup ? arg.to : arg.from
         detail.value = detail.value.map((obj) => {
-
           if (obj.id === from && arg.from !== me) {
             const newObj = {
               ...obj, from: from,
@@ -161,17 +130,16 @@ onMounted(() => {
       } else {
         let from = arg.isGroup ? arg.to : arg.from
         const newChat = {
-          id: from, name: from, from: from, isGroup: arg.isGroup, ...arg.isGroup && { member: arg.member }, list:
-            [arg.list]
+          id: from, name: from, from: from, isGroup: arg.isGroup, ...arg.isGroup && { member: arg.member }, list: [arg.list]
         }
         return detail.value.push(newChat)
       }
-
     })
   }
 })
 
 onUnmounted(() => {
+  // socket.value?.emit("leaveRoom", { name: me })
   socket.value.disconnect()
 })
 
@@ -224,23 +192,9 @@ const createGroup = () => {
 }
 
 const joinGroup = () => {
-  socket.value.emit("joinRoom", { name: me, room: groupName.value, isInvite: false })
-  groupName.value = ""
+  socket.value.emit("joinRoom", { name: me, room: selectedGroup.value, isInvite: false })
 }
 
-// const connect = () => {
-//   const socket = io("http://127.0.0.1:3000")
-//   if (!connected.value) {
-//     // socket.emit("join", me)
-//     socket.connect()
-//     console.log("connected", socket, 'atas');
-//   } else {
-//     console.log(socket);
-
-//     socket.disconnect()
-//   }
-//   connected.value = !connected.value
-// }
 </script>
 
 <template>
@@ -374,12 +328,23 @@ const joinGroup = () => {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3 mt-1">
-            <label class="form-label text-white" for="grp-user-name">Group Name</label>
-            <input id="grp-user-name" type="text" placeholder="Group name" class="form-control" v-model="groupName">
+          <div v-if="groups.length" class="chat-list">
+            <div v-for="(item, i) in groups" :key="i" class="list align-items-center py-2 px-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" :id="item" :value="item" v-model="selectedGroup">
+                <label class="form-check-label" :for="item">
+                  <div class="py-1 d-flex flex-row justify-content-between align-items-start">
+                    <div class="avatar">{{ decodeString(item) }}
+                    </div>
+                    <p class="ms-2 text-capitalize">{{ item }}</p>
+                  </div>
+                </label>
+              </div>
+            </div>
           </div>
+          <p v-else>No group available</p>
           <button class="btn btn-primary w-100 mt-2" data-bs-dismiss="modal" type="button" @click="joinGroup"
-            :disabled="!groupName.length">Join</button>
+            :disabled="!selectedGroup.length">Join</button>
         </div>
       </div>
     </div>
