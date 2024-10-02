@@ -16,7 +16,6 @@ onMounted(() => {
 })
 
 watch(() => route.params.id, () => {
-  console.log("sd");
   if (route.params.id === props.dataChat.id) {
     emit("readChat", { to: props.dataChat.id, isGroup: props.dataChat.isGroup, from: props.me })
   }
@@ -24,7 +23,7 @@ watch(() => route.params.id, () => {
 
 const member = computed(() => {
   if (props.dataChat.isGroup) {
-    return ["You", [...props.dataChat.member.filter(item => item !== props.me)],]
+    return props.dataChat.member.filter(item => item !== props.me)
   }
   return null
 })
@@ -62,7 +61,7 @@ const inputChat = () => {
             <span v-if="props.isOnline" class="online position-static"></span>
           </template>
           <template v-else>
-            <span v-for="(item, i) in member" :key="i">
+            <span v-for="(item, i) in ['you', ...member]" :key="i">
               {{ i !== props.dataChat.member.length - 1 ? (item + ",") :
                 " " + item }}
             </span>
@@ -74,20 +73,33 @@ const inputChat = () => {
       <div v-if="!props.dataChat?.list?.length" class="no-msg">No message</div>
       <template v-else>
         <div v-for="(item, i) in props?.dataChat?.list" :key="i" :id="'chat' + i"
-          :class="`list ${item.name === props.me ? 'justify-content-end' : ''}`">
+          :class="`list ${item.isInfo ? 'justify-content-center' : item.name === props.me ? 'justify-content-end' : ''}`">
           <!-- <div v-if="props.dataChat.isGroup && item.name !== props.me" class="avatar">{{ decodeString(item.name) }}
           </div> -->
-          <div class="active py-2">
-            <p v-if="props.dataChat.isGroup" class="text-capitalize">{{ item.name === props.me ? 'You' : item.name }}
-            </p>
-            <span>{{ item.text }}</span>
-            <div class="d-flex justify-content-end align-items-center ms-3">
-              <span style="font-size: 12px;">
-                {{ convertTimeOnly(item.time) }}
-              </span>
-              <div v-if="item.name === props.me" class="ms-1 check mt-0"
-                :style="`background-color: ${item.isRead ? '#3395ed' : 'grey'}`" />
+          <div class="active py-2" :style="{ 'background-color': item.isInfo && '#23262d' }">
+            <div v-if="item.isInfo" style="font-size: 14px;">
+              <span v-if="!item.isLeave" class="text-gray"> <b class="text-capitalize">{{ item.name === props.me ? 'You'
+                : item.name }}</b>
+                joined group at {{
+                  convertTimeOnly(item.time)
+                }}</span>
+              <span v-else class="text-gray "><b class="text-capitalize"> {{ item.name === props.me ? 'you' : item.name
+                  }}</b> left group at {{
+                    convertTimeOnly(item.time)
+                  }}</span>
             </div>
+            <template v-else>
+              <p v-if="props.dataChat.isGroup" class="text-capitalize">{{ item.name === props.me ? 'you' : item.name }}
+              </p>
+              <span>{{ item.text }}</span>
+              <div class="d-flex justify-content-end align-items-center ms-3">
+                <span style="font-size: 12px;">
+                  {{ convertTimeOnly(item.time) }}
+                </span>
+                <div v-if="item.name === props.me" class="ms-1 check mt-0"
+                  :style="`background-color: ${item.isRead ? '#3395ed' : 'grey'}`" />
+              </div>
+            </template>
           </div>
         </div>
       </template>

@@ -59,9 +59,9 @@ export default {
       </div>
       <h4>Enter your name to start chat</h4>
       <div class="form-group">
-        <input type="text" class="form-control" v-model="username">
+        <input type="text" class="form-control" v-model="username" autofocus>
       </div>
-      <button class="btn btn-primary mt-4 w-100" :disabled="!username || loading">Login</button>
+      <button class="btn btn-primary mt-4 w-100" :disabled="!username || loading" f>Login</button>
     </form>
   </div>
 </template>

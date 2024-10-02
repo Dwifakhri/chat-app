@@ -18,12 +18,17 @@ let groups = []
 
 io.on("connection", (socket) => {
   socket.on("join", (arg) => {
+    console.log(`joined ${socket.id}`)
     users[socket.id] = arg
     socket.join("general")
+    io.to("general").emit("groups", groups)
+    console.log(groups)
+
     io.to("general").emit("users", users)
   })
 
   socket.on("disconnect", () => {
+    console.log(`${socket.id} left`)
     delete users[socket.id]
     io.to("general").emit("users", users)
   })
@@ -34,11 +39,13 @@ io.on("connection", (socket) => {
       arg.name.includes(users[key])
     )
     io.to("general").emit("groups", groups)
-    io.to(idSockets).emit("room", arg)
+    io.to(idSockets).emit("room", {
+      ...arg,
+    })
   })
 
   socket.on("joinRoom", (arg) => {
-    socket.join(arg.room)
+    socket.join(arg.room, socket.id)
     const socketRooms = io.sockets.adapter.rooms.get(arg.room)
     const a = Array.from(socketRooms)
     const member = Object.keys(users)
@@ -46,13 +53,35 @@ io.on("connection", (socket) => {
       .map((key) => users[key])
     io.to(arg.room)
       .except(arg.name)
-      .emit("roomx", { ...arg, member: member })
+      .emit("roomx", {
+        ...arg,
+        list: {
+          name: arg.name,
+          time: new Date(),
+          isInfo: true,
+          isRead: false,
+          isSent: false,
+        },
+        member: member,
+      })
   })
 
-  // socket.on("leaveRoom", (arg) => {
-  //   socket.leave(arg.room)
-  //   io.to(arg.room).emit("roomx", `${arg.name} has left the room ${arg.room}`)
-  // })
+  socket.on("leaveRoom", (arg) => {
+    socket.leave(arg.room.id, socket.id)
+    io.to(arg.room.id).emit("roomx", {
+      room: arg.room.id,
+      name: arg.name,
+      list: {
+        name: arg.name,
+        time: new Date(),
+        isInfo: true,
+        isSent: false,
+        isRead: false,
+        isLeave: true,
+      },
+      isLeave: true,
+    })
+  })
 
   socket.on("chat", (arg) => {
     if (!arg.isGroup) {

@@ -1,29 +1,36 @@
-# socket-io
+# Chat App
 
-This template should help get you started developing with Vue 3 in Vite.
+Real time chat app using vue 3 and socket.io
 
-## Recommended IDE Setup
+## Pre-requisite
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+1. Node.js version >= 18.15.0
+2. Package manager (bun) (https://bun.sh/)
 
 ## Project Setup
 
 ```sh
-npm install
+bun install
 ```
 
-### Compile and Hot-Reload for Development
+### Compile and Hot-Reload for Development (client)
 
 ```sh
-npm run dev
+bun run dev
 ```
 
-### Compile and Minify for Production
+### Compile and Minify for Production (client)
 
 ```sh
-npm run build
+bun run build
+```
+
+### Run Server
+
+```sh
+cd backend
+```
+
+```sh
+bun index.js
 ```

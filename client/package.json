@@ -1,5 +1,5 @@
 {
-  "name": "chat-app",
+  "name": "chat-app-client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,9 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "express": "^4.19.2",
     "sass": "^1.77.8",
-    "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
