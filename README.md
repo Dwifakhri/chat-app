@@ -2,10 +2,6 @@
 
 Real time chat app using vue 3 and socket.io. (https://vuejs.org/) - (https://socket.io/)
 
-## Demo
-
-![Demo](https://github.com/Dwifakhri/chat-app/blob/master/demo.gif)
-
 ## Pre-requisite
 
 1. Node.js version >= 18.15.0
