@@ -1,6 +1,8 @@
 # Chat App
 
-Real time chat app using vue 3 and socket.io
+Real time chat app using vue 3 and socket.io. (https://vuejs.org/) - (https://socket.io/)
+
+## Demo
 
 ## Pre-requisite
 
@@ -32,5 +34,9 @@ cd backend
 ```
 
 ```sh
-bun index.js
+bun install
+```
+
+```sh
+node index.js
 ```

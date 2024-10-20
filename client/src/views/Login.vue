@@ -10,25 +10,6 @@ export default {
   },
   mounted() {
     this.checkSession()
-    // this.$socket.on("connect", () => {
-    //   console.log("connected-" + this.$socket.id)
-    // });
-
-    // this.$socket.on("broadcast", (data) => {
-    //   // this.countTime()
-    //   // console.log(data);
-    //   let x = 0
-    //   if (data) {
-    //     let a = 1000 + new Date().getMilliseconds()
-    //     // console.log(a - x);
-    //     x = a
-    //   }
-    //   // this.playNextChunk(data)
-    // })
-
-    // this.$socket.on("disconnect", () => {
-    //   console.log("disconnect-" + this.$socket.id)
-    // })
   },
   methods: {
     checkSession() {

@@ -65,26 +65,16 @@ onMounted(() => {
     })
 
     socket.value?.on("roomx", (arg) => {
-      console.log(arg, "roomx");
-
       const existChat = detail.value.find((item) => item.id === arg.room)
       if (existChat) {
-        console.log('sd');
-
         detail.value = detail.value.map((obj) => {
           if (obj.id === arg.room) {
             if (arg.isLeave) {
-              console.log(1);
-
               const exMember = obj.member.filter(item => item !== arg.name)
               return { ...obj, member: exMember, list: [...obj.list, arg.list] }
             } else if (!arg.isInvite) {
-              console.log(2);
               return { ...obj, member: [...obj.member, arg.name], list: route?.params?.id === arg.room ? [...obj.list, { ...arg.list, isSent: true }] : [...obj.list, arg.list] }
             } else {
-              console.log(obj);
-
-              console.log(3);
               return { ...obj, member: [...obj.member], list: [...obj.list, arg.list] }
             }
           }
@@ -236,7 +226,7 @@ const joinGroup = () => {
           <img src="@/assets/icon/users.svg" alt="grp">
         </div>
       </template>
-      <div class="col-3 px-0">
+      <div class="col-4 px-0">
         <div class="chat-list chat-section">
           <div class="px-3 mb-3 mt-1">
             <input type="text" placeholder="Search" class="form-control">
@@ -265,16 +255,16 @@ const joinGroup = () => {
           </template>
           <div v-else class="px-3">
             <button class="btn btn-primary w-100" type="button" data-bs-toggle="modal" data-bs-target="#usersModal">
-              New message
+              New <span class="d-none d-md-inline-block" style="font-size: 16px;">message</span>
             </button>
             <button class="btn btn-success w-100 mt-2" type="button" data-bs-toggle="modal" data-bs-target="#joinGroup">
-              Join group
+              Join <span class="d-none d-md-inline-block" style="font-size: 16px;">group</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div class="col-9">
+      <div class="col-8">
         <div v-if="!isDetail" class="d-flex align-items-center justify-content-center h-100">
           <p>Select chat to start messaging</p>
         </div>

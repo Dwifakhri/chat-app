@@ -18,17 +18,13 @@ let groups = []
 
 io.on("connection", (socket) => {
   socket.on("join", (arg) => {
-    console.log(`joined ${socket.id}`)
     users[socket.id] = arg
     socket.join("general")
     io.to("general").emit("groups", groups)
-    console.log(groups)
-
     io.to("general").emit("users", users)
   })
 
   socket.on("disconnect", () => {
-    console.log(`${socket.id} left`)
     delete users[socket.id]
     io.to("general").emit("users", users)
   })
